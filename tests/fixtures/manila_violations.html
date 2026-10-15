@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>City of Manila Local Government System</title></head>
+<body>
+  <h1>Notice of Violations Inquiry</h1>
+  <form action="/nocontact" method="post">
+    <input type="text" name="plate_number" placeholder="Plate Number" value="ABC1234">
+    <select name="lookup_by">
+      <option value="">-Select-</option>
+      <option value="plate" selected>Plate Number</option>
+      <option value="mv">MV File Number</option>
+    </select>
+    <div class="g-recaptcha" data-sitekey="6LeTESTTESTTESTTESTTEST"></div>
+    <button type="submit">Inquire</button>
+  </form>
+  <div id="results">
+    <div class="violation-card">
+      <div class="field"><span class="label">Ticket No.</span><span class="value">MNL-00088421</span></div>
+      <div class="field"><span class="label">Plate Number</span><span class="value">ABC1234</span></div>
+      <div class="field"><span class="label">Violation Date</span><span class="value">2026-08-30</span></div>
+      <div class="field"><span class="label">Time</span><span class="value">07:45 AM</span></div>
+      <div class="field"><span class="label">Location</span><span class="value">Taft Ave. cor. Pedro Gil</span></div>
+      <div class="field"><span class="label">Violation</span><span class="value">Beating the Red Light</span></div>
+      <div class="field"><span class="label">Amount</span><span class="value">5,000.00</span></div>
+      <div class="field"><span class="label">Status</span><span class="value">Unpaid</span></div>
+    </div>
+    <div class="violation-card">
+      <div class="field"><span class="label">Ticket No.</span><span class="value">MNL-00088422</span></div>
+      <div class="field"><span class="label">Plate Number</span><span class="value">ABC1234</span></div>
+      <div class="field"><span class="label">Violation Date</span><span class="value">2026-09-02</span></div>
+      <div class="field"><span class="label">Time</span><span class="value">18:20</span></div>
+      <div class="field"><span class="label">Location</span><span class="value">Rizal Ave. cor. Carriedo</span></div>
+      <div class="field"><span class="label">Violation</span><span class="value">Illegal Loading/Unloading</span></div>
+      <div class="field"><span class="label">Amount</span><span class="value">1,000.00</span></div>
+      <div class="field"><span class="label">Status</span><span class="value">Unpaid</span></div>
+    </div>
+  </div>
+</body>
+</html>

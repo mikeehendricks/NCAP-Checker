@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% from "partials/_status_badge.html" import badge with context %}
+{% block title %}{{ vehicle.display_name }} &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('vehicles.index') }}">Vehicles</a></li>
+    <li class="breadcrumb-item active">{{ vehicle.display_name }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
+  <div>
+    <h1 class="h3 mb-1">{{ vehicle.display_name }}</h1>
+    <div class="text-secondary">
+      <span class="font-monospace">{{ vehicle.plate_number }}</span> &middot;
+      MV <span class="font-monospace">{{ vehicle.mv_number }}</span>
+    </div>
+    <div class="mt-2">
+      {{ badge(vehicle.last_status) }}
+      {% if not vehicle.is_active %}<span class="badge text-bg-light">paused</span>{% endif %}
+      <span class="text-secondary small ms-1">{{ vehicle.last_message }}</span>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <form method="post" action="{{ url_for('vehicles.check', vehicle_id=vehicle.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-success" type="submit" {{ 'disabled' if checking else '' }}>
+        {%- if checking -%}
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          Checking&hellip;
+        {%- else -%}
+          Check all portals now
+        {%- endif -%}
+      </button>
+    </form>
+    <a class="btn btn-outline-secondary" href="{{ url_for('vehicles.edit', vehicle_id=vehicle.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('vehicles.toggle', vehicle_id=vehicle.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-secondary" type="submit">
+        {{ 'Resume monitoring' if not vehicle.is_active else 'Pause monitoring' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Last check</div>
+      <div class="fs-5">
+        {% if vehicle.last_checked_at %}{{ vehicle.last_checked_at|localtime }}
+        {% else %}&ndash;{% endif %}
+      </div>
+      <div class="text-secondary small">{{ vehicle.last_checked_at|humanize }}</div>
+    </div></div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Next check</div>
+      <div class="fs-5">{{ (vehicle.next_check_at(default_interval))|humanize }}</div>
+      <div class="text-secondary small">every {{ vehicle.effective_interval(default_interval) // 60 }} h</div>
+    </div></div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Open violations</div>
+      <div class="fs-5 {{ 'text-danger' if vehicle.open_violation_count() else '' }}">
+        {{ vehicle.open_violation_count() }}
+      </div>
+      <div class="text-secondary small">{{ vehicle.total_due()|money }} total</div>
+    </div></div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Checks run</div>
+      <div class="fs-5">{{ vehicle.check_count }}</div>
+      <div class="text-secondary small">across {{ sources|length }} portals</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Violations</span>
+    <span class="text-secondary small">{{ violations|length }} record(s)</span>
+  </div>
+  <div class="card-body p-0">
+    {% if violations %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th><th>Offense</th><th>Location</th><th>Reference</th>
+              <th class="text-end">Amount</th><th>Portal</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for violation in violations %}
+            <tr class="{{ 'table-light text-secondary' if violation.is_resolved else '' }}">
+              <td class="small text-nowrap">
+                {{ violation.violation_date|shortdate }}
+                {% if violation.violation_time %}<div class="text-secondary">{{ violation.violation_time }}</div>{% endif %}
+              </td>
+              <td class="small">{{ violation.offense or '-' }}</td>
+              <td class="small">{{ violation.location or '-' }}</td>
+              <td class="small font-monospace">{{ violation.reference }}</td>
+              <td class="small text-end">{{ violation.amount|money }}</td>
+              <td class="small">{{ violation.source.name if violation.source else '-' }}</td>
+              <td class="small">
+                {{ violation.status or '-' }}
+                {% if violation.is_resolved %}
+                  <span class="badge text-bg-success-subtle text-success-emphasis">settled</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post"
+                      action="{{ url_for('vehicles.resolve_violation', violation_id=violation.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="resolved" value="{{ '0' if violation.is_resolved else '1' }}">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">
+                    {{ 'Reopen' if violation.is_resolved else 'Mark settled' }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 text-center text-secondary small">
+        No violations recorded for this vehicle.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if checking %}
+<div class="alert alert-info d-flex align-items-center" id="checking-banner">
+  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+  <div>
+    Checking the enabled portals now&hellip; this page refreshes every few seconds.
+    <div class="small">A headless browser visit per portal takes a few seconds each.</div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card border-0 shadow-sm" id="runs">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Check history</span>
+    <span class="text-secondary small">newest first &middot; {{ runs|length }} shown</span>
+  </div>
+  <div class="card-body p-0">
+    {% if runs %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>When</th><th>Portal</th><th>Result</th><th>Engine</th>
+              <th class="text-center">New</th><th>Trigger</th><th>Detail</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for run in runs %}
+            <tr>
+              <td class="small text-nowrap">{{ run.created_at|localtime }}</td>
+              <td class="small">{{ run.source.name if run.source else '-' }}</td>
+              <td>{{ badge(run.status) }}</td>
+              <td class="small"><code>{{ run.engine or '-' }}</code></td>
+              <td class="text-center">
+                {% if run.new_count %}<span class="badge text-bg-danger">{{ run.new_count }}</span>
+                {% else %}<span class="text-secondary">&ndash;</span>{% endif %}
+              </td>
+              <td class="small">{{ run.triggered_by }}</td>
+              <td class="small text-secondary" title="{{ run.message }}">{{ run.message|truncate(60) }}</td>
+              <td class="text-end">
+                {% if run.screenshot and current_user.is_admin %}
+                  <a class="btn btn-sm btn-outline-secondary"
+                     href="{{ url_for('admin.screenshot', filename=run.screenshot) }}"
+                     target="_blank">Shot</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 text-center text-secondary small">
+        No checks have been run yet for this vehicle.
+      </div>
+    {% endif %}
+  </div>
+  <div class="card-footer bg-white small text-secondary">
+    Need to debug one portal? Run a single
+    <a href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}">check</a> and, as
+    administrator, use <em>Admin &rarr; Sources &rarr; Probe</em> to see the raw page.
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if checking %}
+<script>
+  // Poll while a check is running, then reload once fresh results exist.
+  (function () {
+    var attempts = 0;
+    var timer = setInterval(function () {
+      attempts += 1;
+      fetch(location.pathname + "/runs.json", {headers: {"X-Requested-With": "fetch"}})
+        .then(function (response) { return response.json(); })
+        .then(function (rows) {
+          if ((rows && rows.length) || attempts > 60) {
+            clearInterval(timer);
+            location.reload();
+          }
+        })
+        .catch(function () {
+          if (attempts > 60) { clearInterval(timer); location.reload(); }
+        });
+    }, 4000);
+  })();
+</script>
+{% endif %}
+{% endblock %}

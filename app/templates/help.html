@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Help &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">How {{ app_name }} works</h1>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Status meanings</div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <thead><tr><th style="width:180px">Status</th><th>What it means</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge text-bg-danger">Violation found</span></td>
+                <td>The portal returned at least one violation record.</td></tr>
+            <tr><td><span class="badge text-bg-success">No violations</span></td>
+                <td>The portal positively reported no violations for this plate + MV file number.</td></tr>
+            <tr><td><span class="badge text-bg-warning">Blocked</span></td>
+                <td>The portal showed a CAPTCHA / bot check or refused the request. The status of
+                    your vehicle is <strong>not</strong> confirmed. Wait for the automatic retry or
+                    run a probe as administrator.</td></tr>
+            <tr><td><span class="badge text-bg-secondary">Check failed</span></td>
+                <td>Network error, timeout or an unexpected portal error.</td></tr>
+            <tr><td><span class="badge text-bg-info">Unknown</span></td>
+                <td>The portal replied, but the response was not recognised. Tune the source in
+                    <em>Admin &rarr; Sources</em>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Why some portals get blocked</div>
+      <div class="card-body">
+        <p class="small text-secondary">
+          Every NCAP portal is protected by a bot check (Cloudflare Turnstile on the
+          Quezon City / Para&ntilde;aque / San Juan platform, reCAPTCHA on Manila, and a WAF
+          on MMDA). This app never bypasses those protections: it drives a real
+          Chromium browser through Playwright, exactly like a person would, and it
+          backs off automatically instead of hammering the sites.
+        </p>
+        <ul class="small mb-0">
+          <li>Keep the check interval at a few hours or more &ndash; set in
+              <em>Admin &rarr; Settings &rarr; Scheduling</em>.</li>
+          <li>Run the server from a residential or office IP where possible.</li>
+          <li>Use <em>Admin &rarr; Sources &rarr; Probe</em> to see exactly what a portal
+              returned, including a screenshot.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Portals checked</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for source in sources %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="small fw-semibold">{{ source.name }}</div>
+                <a class="small text-secondary" href="{{ source.check_url }}" target="_blank"
+                   rel="noopener">{{ source.check_url }}</a>
+              </div>
+              <span class="badge text-bg-light">{{ source.engine }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Where is my MV file number?</div>
+      <div class="card-body small text-secondary">
+        <p>On your LTO Certificate of Registration (CR), near your plate number. It is
+        a long digit string such as <code>1234-1234567890</code>.</p>
+        <p class="mb-0">Spaces and dashes are ignored &ndash; enter it exactly as printed
+        on the CR and the app normalises it.</p>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Automating from a script</div>
+      <div class="card-body small">
+        <p class="text-secondary">Use your API key from the profile page:</p>
+        <pre class="bg-dark text-light rounded p-2 small mb-0"><code>curl -X POST \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"plate_number":"ABC1234","mv_number":"1234567890"}' \
+  http://your-server/api/lookup</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

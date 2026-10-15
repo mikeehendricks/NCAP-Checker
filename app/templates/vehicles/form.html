@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <h1 class="h3 mb-4">{{ title }}</h1>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.label.label(class="form-label") }}
+            {{ form.label(class="form-control" + (" is-invalid" if form.label.errors else ""),
+                          placeholder="e.g. Family car") }}
+            {% for error in form.label.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.plate_number.label(class="form-label") }}
+              {{ form.plate_number(class="form-control text-uppercase" + (" is-invalid" if form.plate_number.errors else ""),
+                                    placeholder="ABC1234") }}
+              {% for error in form.plate_number.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.mv_number.label(class="form-label") }}
+              {{ form.mv_number(class="form-control" + (" is-invalid" if form.mv_number.errors else ""),
+                                 placeholder="1234-1234567890") }}
+              <div class="form-text">{{ form.mv_number.description }}</div>
+              {% for error in form.mv_number.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              {{ form.interval_minutes.label(class="form-label") }}
+              {{ form.interval_minutes(class="form-control" + (" is-invalid" if form.interval_minutes.errors else ""),
+                                        placeholder="720") }}
+              <div class="form-text">Leave empty to use the server default.</div>
+              {% for error in form.interval_minutes.errors %}
+                <div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <div class="form-check">
+                {{ form.is_active(class="form-check-input") }}
+                {{ form.is_active.label(class="form-check-label") }}
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            {{ form.submit(class="btn btn-success") }}
+            {% if vehicle %}
+              <a class="btn btn-outline-secondary"
+                 href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}">Cancel</a>
+            {% else %}
+              <a class="btn btn-outline-secondary" href="{{ url_for('vehicles.index') }}">Cancel</a>
+            {% endif %}
+          </div>
+        </form>
+        {% if vehicle %}
+          <form method="post" class="mt-3"
+                action="{{ url_for('vehicles.delete', vehicle_id=vehicle.id) }}"
+                onsubmit="return confirm('Delete {{ vehicle.display_name }} and its history?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-outline-danger" type="submit">Delete this vehicle</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-body">
+        <h2 class="h6">Where do I find the MV file number?</h2>
+        <p class="small text-secondary mb-0">
+          The MV (Motor Vehicle) file number is printed on your LTO Certificate of
+          Registration. It is usually a long digit string, sometimes written with a
+          dash, for example <code>1234-1234567890</code>. Dashes and spaces are
+          ignored by this app.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

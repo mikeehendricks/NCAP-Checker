@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Updates &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Updates &amp; maintenance</h1>
+{% include "admin/_nav.html" %}
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Application update</div>
+      <div class="card-body">
+        <dl class="row small mb-3">
+          <dt class="col-4 text-secondary fw-normal">Version</dt>
+          <dd class="col-8">{{ git.version }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Branch</dt>
+          <dd class="col-8">{{ git.branch or 'not a git clone' }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Commit</dt>
+          <dd class="col-8 font-monospace">
+            {{ git.commit_short or '-' }}
+            {% if git.subject %}<div class="text-secondary">{{ git.subject }}</div>{% endif %}
+          </dd>
+          <dt class="col-4 text-secondary fw-normal">Committed</dt>
+          <dd class="col-8">{{ git.date or '-' }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Working tree</dt>
+          <dd class="col-8">
+            {% if git.is_repo %}
+              <span class="badge text-bg-{{ 'warning' if git.dirty else 'success' }}">
+                {{ 'modified' if git.dirty else 'clean' }}
+              </span>
+            {% else %}
+              <span class="badge text-bg-secondary">not a git clone</span>
+            {% endif %}
+          </dd>
+          <dt class="col-4 text-secondary fw-normal">Remote</dt>
+          <dd class="col-8 small">{{ git.remote_url or '-' }}</dd>
+        </dl>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="check">
+            <button class="btn btn-outline-primary" type="submit"
+                    {{ 'disabled' if update_mode == 'disabled' or not git.is_repo else '' }}>
+              Check for updates
+            </button>
+          </form>
+          <form method="post" onsubmit="return confirm('Pull the latest code, install dependencies and restart the services?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="apply">
+            <button class="btn btn-success" type="submit"
+                    {{ 'disabled' if update_mode == 'disabled' or not git.is_repo else '' }}>
+              Update now
+            </button>
+          </form>
+          <form method="post" onsubmit="return confirm('Restart the NCAP services now?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="restart">
+            <button class="btn btn-outline-secondary" type="submit">Restart services</button>
+          </form>
+        </div>
+        {% if update_mode == 'disabled' %}
+          <div class="alert alert-secondary mt-3 mb-0 small">
+            Updates are disabled for this installation (NCAP_UPDATE_MODE=disabled).
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if status %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white fw-semibold">Last action</div>
+        <div class="card-body">
+          {% if status.type == 'check' %}
+            {% if status.error %}
+              <div class="alert alert-danger small">{{ status.error }}</div>
+            {% elif status.available %}
+              <div class="alert alert-success small">
+                {{ status.behind }} new commit(s) available on {{ status.branch }}.
+              </div>
+              {% if status.commits %}
+                <pre class="small bg-dark text-light rounded p-3 mb-0">{% for line in status.commits %}{{ line }}
+{% endfor %}</pre>
+              {% endif %}
+            {% else %}
+              <div class="alert alert-secondary small mb-0">
+                Already up to date ({{ status.local }}){% if status.ahead %},
+                {{ status.ahead }} local commit(s) ahead{% endif %}.
+              </div>
+            {% endif %}
+          {% elif status.type == 'apply' %}
+            {% for name, ok, output in status.steps %}
+              <div class="small mb-2">
+                <span class="badge text-bg-{{ 'success' if ok else 'danger' }}">
+                  {{ 'ok' if ok else 'failed' }}
+                </span>
+                <code>{{ name }}</code>
+                {% if output %}<pre class="small bg-light rounded p-2 mt-1 mb-0">{{ output|truncate(600) }}</pre>{% endif %}
+              </div>
+            {% endfor %}
+          {% elif status.type == 'restart' %}
+            <div class="alert alert-{{ 'success' if status.ok else 'warning' }} small mb-0">
+              {{ status.detail }}
+            </div>
+          {% elif status.type == 'cleanup' %}
+            <div class="alert alert-secondary small mb-0">
+              Removed {{ status.removed }} old check run(s).
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Systemd services</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for service in services %}
+            <li class="list-group-item d-flex justify-content-between align-items-center small">
+              <code>{{ service.name }}</code>
+              <span class="badge text-bg-{{ 'success' if service.active else 'secondary' }}">
+                {{ service.state }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="card-footer bg-white small text-secondary">
+        Restart requires passwordless sudo for the service user
+        (<code>sudo systemctl restart ncap-web ncap-scheduler</code>).
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Data retention</div>
+      <div class="card-body">
+        <form method="post" class="d-flex gap-2 align-items-end">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="cleanup">
+          <div>
+            <label class="form-label small mb-1" for="days">Delete check history older than (days)</label>
+            <input class="form-control form-control-sm" type="number" min="1"
+                   id="days" name="days" value="365" style="width:120px">
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" type="submit">Prune now</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

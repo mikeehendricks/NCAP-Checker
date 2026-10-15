@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}500 &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-6">500 &ndash; Something went wrong</h1>
+  <p class="text-secondary">
+    The error has been logged. Check <code>instance/ncap.log</code> for details.
+  </p>
+  <a class="btn btn-success" href="{{ url_for('main.index') }}">Back to dashboard</a>
+</div>
+{% endblock %}

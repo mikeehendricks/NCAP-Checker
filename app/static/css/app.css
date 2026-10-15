@@ -1,0 +1,152 @@
+/* NCAP Checker - small layer on top of Bootstrap 5 */
+
+:root {
+  --ncap-ink: #0f1720;
+  --ncap-ink-soft: #1b2735;
+  --ncap-accent: #16a34a;
+  --ncap-accent-dark: #15803d;
+}
+
+body {
+  background: #f4f6f8;
+  color: #16202b;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-navbar {
+  background: linear-gradient(90deg, var(--ncap-ink), var(--ncap-ink-soft));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .06), 0 2px 12px rgba(15, 23, 32, .18);
+}
+
+.app-navbar .navbar-brand,
+.app-navbar .nav-link {
+  color: rgba(255, 255, 255, .82);
+}
+
+.app-navbar .navbar-brand {
+  color: #fff;
+  letter-spacing: .2px;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus {
+  color: #fff;
+}
+
+.app-navbar .navbar-toggler {
+  border-color: rgba(255, 255, 255, .25);
+  filter: invert(1) grayscale(1) brightness(2);
+}
+
+.app-footer {
+  border-top: 1px solid #e3e7ea;
+  background: #fff;
+  color: #5b6b7a;
+}
+
+/* Cards & stats */
+.stat-card {
+  border-left: 3px solid var(--ncap-accent) !important;
+}
+
+.stat-value {
+  font-size: 1.9rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.card {
+  border-radius: .75rem;
+}
+
+.card-header {
+  border-radius: .75rem .75rem 0 0 !important;
+}
+
+.badge {
+  font-weight: 600;
+  letter-spacing: .1px;
+}
+
+.status-badge {
+  font-size: .72rem;
+  padding: .35em .6em;
+}
+
+/* Landing hero */
+.display-5 {
+  letter-spacing: -.5px;
+}
+
+/* Tables */
+.table > :not(caption) > * > * {
+  padding: .55rem .75rem;
+}
+
+.table thead th {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #6b7a89;
+  font-weight: 600;
+}
+
+/* Admin navigation */
+.admin-nav .nav-link {
+  border-radius: 999px;
+  padding: .35rem 1rem;
+  color: #475569;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  margin-right: .35rem;
+  margin-bottom: .35rem;
+}
+
+.admin-nav .nav-link.active {
+  background: var(--ncap-ink);
+  border-color: var(--ncap-ink);
+  color: #fff;
+}
+
+/* Probe / diagnostics */
+.page-snippet {
+  background: #0f1720;
+  color: #b7f7cd;
+  border-radius: .5rem;
+  padding: .85rem 1rem;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.flash-stack .alert {
+  border-radius: .6rem;
+}
+
+.btn {
+  border-radius: .5rem;
+  font-weight: 500;
+}
+
+.btn-success {
+  background: var(--ncap-accent);
+  border-color: var(--ncap-accent);
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background: var(--ncap-accent-dark);
+  border-color: var(--ncap-accent-dark);
+}
+
+code, .font-monospace {
+  font-size: .85em;
+}
+
+/* Print-friendly violation summary */
+@media print {
+  .app-navbar, .app-footer, .btn, .admin-nav { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+}

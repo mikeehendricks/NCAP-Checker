@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ app_name }} &ndash; {{ tagline or 'Consolidated NCAP violation monitoring' }}{% endblock %}
+
+{% block content %}
+<div class="row align-items-center g-5">
+  <div class="col-lg-6">
+    <span class="badge text-bg-success-subtle text-success-emphasis mb-3">Metro Manila NCAP</span>
+    <h1 class="display-5 fw-bold lh-sm">One dashboard for every NCAP portal.</h1>
+    <p class="lead text-secondary">
+      Save your plate and MV file number once. {{ app_name }} checks
+      Quezon City, Manila, Para&ntilde;aque, San Juan and MMDA on a schedule and tells
+      you when something new appears.
+    </p>
+    <ul class="list-unstyled d-grid gap-2 mb-4">
+      <li>&#10003; Five official portals checked from one place</li>
+      <li>&#10003; Automatic re-checks on your schedule (hourly, daily, weekly)</li>
+      <li>&#10003; Clear "blocked" warnings &ndash; never a false all-clear</li>
+      <li>&#10003; Runs on your own Ubuntu server, data stays with you</li>
+    </ul>
+    <div class="d-flex gap-2">
+      <a class="btn btn-success btn-lg" href="{{ url_for('auth.register') }}">Create an account</a>
+      <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('auth.login') }}">Sign in</a>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-lg">
+      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Consolidated status</span>
+        <span class="badge text-bg-secondary">sample</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>Vehicle</th><th class="text-center">QC</th><th class="text-center">Manila</th>
+                <th class="text-center">Para&ntilde;aque</th><th class="text-center">San Juan</th>
+                <th class="text-center">MMDA</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ABC 1234</strong><div class="text-muted small">Family car</div></td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center text-danger fw-bold">1</td>
+              <td class="text-center">&#10003;</td>
+            </tr>
+            <tr>
+              <td><strong>NXY 9012</strong><div class="text-muted small">Delivery</div></td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center text-warning" title="Blocked">&#9888;</td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center">&#10003;</td>
+              <td class="text-center">&#10003;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer small text-muted">
+        &#10003; no violations &middot; &#9888; portal blocked the check &middot; number = violations found
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-5">
+  <div class="col-md-4">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <h3 class="h5">1. Add a vehicle</h3>
+        <p class="text-secondary mb-0">Plate number plus the MV file number printed on
+        your LTO Certificate of Registration.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <h3 class="h5">2. We check on schedule</h3>
+        <p class="text-secondary mb-0">A background worker visits each portal politely,
+        with back-off and retries, and stores every result.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 border-0 shadow-sm">
+      <div class="card-body">
+        <h3 class="h5">3. Get alerted</h3>
+        <p class="text-secondary mb-0">New violations raise an in-app alert and,
+        if you configure SMTP, an e-mail.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

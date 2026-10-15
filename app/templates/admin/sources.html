@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Sources &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">NCAP sources</h1>
+{% include "admin/_nav.html" %}
+
+<p class="text-secondary">
+  These are the portals the checker queries. Everything except the primary key is
+  editable: point a source at a new URL, switch engines, or tune the selectors when
+  a portal changes its markup. Use <strong>Probe</strong> to run a single live lookup
+  and see exactly what came back.
+</p>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">{{ sources|length }} configured</span>
+    <form method="post" action="{{ url_for('admin.seed_sources') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm btn-outline-secondary" type="submit">Restore missing defaults</button>
+    </form>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Portal</th><th>URL</th><th>Engine</th><th>Health</th>
+            <th class="text-center">Enabled</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for source in sources %}
+          <tr>
+            <td>
+              <div class="small fw-semibold">{{ source.name }}</div>
+              <div class="text-secondary small">{{ source.agency }}</div>
+            </td>
+            <td class="small">
+              <a href="{{ source.check_url }}" target="_blank" rel="noopener"
+                 class="text-truncate d-inline-block" style="max-width:280px">{{ source.check_url }}</a>
+            </td>
+            <td class="small"><code>{{ source.engine }}</code></td>
+            <td>
+              <span class="badge text-bg-{{ 'success' if source.health == 'healthy' else ('danger' if source.health in ('failing','blocked') else 'secondary') }}">
+                {{ source.health }}
+              </span>
+              {% if source.last_status %}
+                <div class="text-secondary small">{{ CheckStatus.label(source.last_status) }}</div>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <form method="post" action="{{ url_for('admin.toggle_source', source_id=source.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-check form-switch d-inline-block">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                         {{ 'checked' if source.enabled else '' }}
+                         onchange="this.form.submit()" id="enabled-{{ source.id }}">
+                  <label class="form-check-label visually-hidden" for="enabled-{{ source.id }}">Enabled</label>
+                </div>
+              </form>
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a class="btn btn-sm btn-outline-success"
+                   href="{{ url_for('admin.probe_source', source_id=source.id) }}">Probe</a>
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('admin.edit_source', source_id=source.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('admin.reset_source', source_id=source.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">Reset</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

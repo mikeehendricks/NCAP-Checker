@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Check for Violations - Quezon City NCAP</title></head>
+<body>
+  <header><img src="/assets/quezon-city-seal.png" alt="Quezon City"><h1>Check for Violations</h1></header>
+  <section class="search-panel">
+    <div class="tabs">
+      <button class="tab active">Plate + MV File No.</button>
+      <button class="tab">Plate + NOV No.</button>
+    </div>
+    <form id="search-form" action="/check-violations" method="post">
+      <input type="text" name="plate_number" placeholder="Plate Number" value="ABC1234">
+      <input type="text" name="mv_file_number" placeholder="MV File Number" value="1234567890">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEv_sD9nlxmq0xP1"></div>
+      <input type="hidden" name="cf-turnstile-response" value="token-abc">
+      <button type="submit">Search</button>
+    </form>
+  </section>
+  <section class="results">
+    <h2>Violation Records</h2>
+    <table class="table violations-table">
+      <thead>
+        <tr>
+          <th>Plate Number</th>
+          <th>Ticket No.</th>
+          <th>Violation Date</th>
+          <th>Time</th>
+          <th>Location</th>
+          <th>Violation</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ABC1234</td>
+          <td>QC-2026-000123</td>
+          <td>09/12/2026</td>
+          <td>08:32 AM</td>
+          <td>Commonwealth Ave. cor. Don Antonio St.</td>
+          <td>Disregarding Traffic Sign</td>
+          <td>&#8369; 2,000.00</td>
+          <td>Unpaid</td>
+        </tr>
+        <tr>
+          <td>ABC1234</td>
+          <td>QC-2026-000456</td>
+          <td>14 September 2026</td>
+          <td>17:05</td>
+          <td>Quezon Ave. cor. EDSA</td>
+          <td>Illegal Parking</td>
+          <td>PHP 1,500.00</td>
+          <td>Unpaid</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Notifications &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <h1 class="h3 mb-0">Notifications</h1>
+  {% if items %}
+    <form method="post" action="{{ url_for('main.mark_all_notifications') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-secondary btn-sm" type="submit">Mark all as read</button>
+    </form>
+  {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    {% if items %}
+      <ul class="list-group list-group-flush">
+        {% for item in items %}
+          <li class="list-group-item {{ 'list-group-item-light' if item.is_read else '' }}">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <div class="fw-semibold {{ '' if item.is_read else 'text-dark' }}">
+                  {% if item.kind == 'violation' %}
+                    <span class="badge text-bg-danger me-1">violation</span>
+                  {% elif item.kind == 'warning' %}
+                    <span class="badge text-bg-warning me-1">warning</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary me-1">info</span>
+                  {% endif %}
+                  {{ item.title }}
+                </div>
+                <div class="small text-secondary">{{ item.body }}</div>
+                <div class="small text-secondary mt-1">{{ item.created_at|localtime }}</div>
+              </div>
+              <div class="text-nowrap">
+                {% if item.url %}
+                  <a class="btn btn-sm btn-outline-secondary" href="{{ item.url }}">Open</a>
+                {% endif %}
+                {% if not item.is_read %}
+                  <form method="post" class="d-inline"
+                        action="{{ url_for('main.mark_notification', notification_id=item.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-success" type="submit">Mark read</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="p-5 text-center text-secondary">You have no notifications yet.</div>
+    {% endif %}
+  </div>
+  {% if pagination and pagination.pages > 1 %}
+    <div class="card-footer bg-white">
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('main.notifications', page=pagination.prev_num) }}">Previous</a>
+            </li>
+          {% endif %}
+          <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }} of {{ pagination.pages }}</span></li>
+          {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('main.notifications', page=pagination.next_num) }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
