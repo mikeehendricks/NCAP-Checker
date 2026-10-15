@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Check for Violations - Quezon City NCAP</title></head>
+<body>
+  <header><h1>Check for Violations</h1></header>
+  <section class="search-panel">
+    <form id="search-form" action="/check-violations" method="post">
+      <input type="text" name="plate_number" placeholder="Plate Number" value="XYZ9999">
+      <input type="text" name="mv_file_number" placeholder="MV File Number" value="9876543210">
+      <button type="submit">Search</button>
+    </form>
+  </section>
+  <section class="results">
+    <div class="empty-state">
+      <h3>No violations found</h3>
+      <p>This vehicle has no recorded violation under the No Contact Apprehension Program.</p>
+    </div>
+  </section>
+</body>
+</html>

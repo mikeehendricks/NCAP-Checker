@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Awaiting approval &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6 text-center">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-5">
+        <h1 class="h4">Waiting for administrator approval</h1>
+        <p class="text-secondary mb-4">
+          Your account was created, but this server requires an administrator to
+          approve new accounts before they can monitor vehicles.
+        </p>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-outline-secondary" type="submit">Sign out</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

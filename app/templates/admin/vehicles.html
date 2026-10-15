@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "partials/_status_badge.html" import badge with context %}
+{% block title %}Vehicles &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">All vehicles</h1>
+{% include "admin/_nav.html" %}
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    {% if vehicles %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Owner</th><th>Vehicle</th><th>Plate</th><th>MV file no.</th>
+              <th>Status</th><th class="text-center">Open</th><th>Last check</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for vehicle in vehicles %}
+            <tr>
+              <td class="small">{{ vehicle.owner.username }}</td>
+              <td class="small">{{ vehicle.label or '-' }}</td>
+              <td class="small font-monospace">{{ vehicle.plate_number }}</td>
+              <td class="small font-monospace">{{ vehicle.mv_number }}</td>
+              <td>{{ badge(vehicle.last_status, tooltip=vehicle.last_message) }}</td>
+              <td class="text-center small">{{ vehicle.open_violation_count() }}</td>
+              <td class="small">{{ vehicle.last_checked_at|humanize }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-secondary">No vehicles have been saved yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

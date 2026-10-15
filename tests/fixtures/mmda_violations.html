@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>May Huli Ka - MMDA</title></head>
+<body>
+  <h1>May Huli Ka</h1>
+  <form id="frmSearch" action="/search" method="post">
+    <input type="text" id="plate_number" name="plate_number" placeholder="Plate / Conduction Sticker No." value="ABC1234">
+    <input type="text" id="mv_file_number" name="mv_file_number" placeholder="MV File Number" value="1234567890">
+    <button type="submit">CHECK</button>
+  </form>
+  <div class="result-wrapper">
+    <table id="tblResults" class="table table-striped">
+      <thead>
+        <tr>
+          <th>Notice of Violation No.</th>
+          <th>Plate No.</th>
+          <th>Apprehension Date</th>
+          <th>Place of Violation</th>
+          <th>Nature of Violation</th>
+          <th>Fine</th>
+          <th>Payment Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>MMDA-2026-77120</td>
+          <td>ABC1234</td>
+          <td>2026-09-20 09:14:00</td>
+          <td>EDSA cor. Ortigas Ave.</td>
+          <td>Bus Lane Violation</td>
+          <td>5,000.00</td>
+          <td>Unsettled</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

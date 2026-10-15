@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}About &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-1">{{ app_name }}</h1>
+        <p class="text-secondary">{{ tagline }}</p>
+        <dl class="row small mb-0">
+          <dt class="col-4 text-secondary fw-normal">Version</dt>
+          <dd class="col-8">{{ app_version }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Git branch</dt>
+          <dd class="col-8">{{ git.branch or 'n/a' }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Commit</dt>
+          <dd class="col-8 font-monospace">{{ git.commit_short or 'n/a' }}</dd>
+          <dt class="col-4 text-secondary fw-normal">Committed</dt>
+          <dd class="col-8">{{ git.date or 'n/a' }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header bg-white fw-semibold">Disclaimer</div>
+      <div class="card-body small text-secondary">
+        This is an unofficial, self-hosted convenience tool. It is not affiliated
+        with any LGU or with MMDA. Always confirm a violation on the official portal
+        before paying any fine. Data you enter is stored only on the server you run
+        this app on.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

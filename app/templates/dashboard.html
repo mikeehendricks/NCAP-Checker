@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% from "partials/_status_badge.html" import badge with context %}
+{% block title %}Dashboard &ndash; {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h1 class="h3 mb-1">Dashboard</h1>
+    <p class="text-secondary mb-0">
+      {% if totals.attention %}
+        <span class="text-warning fw-semibold">{{ totals.attention }} vehicle(s) need attention</span>
+        &middot;
+      {% endif %}
+      {{ totals.monitored }} of {{ totals.vehicles }} vehicle(s) monitored
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-success" href="{{ url_for('vehicles.create') }}">Add vehicle</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('vehicles.index') }}">Manage</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-secondary small text-uppercase">Open violations</div>
+        <div class="stat-value {{ 'text-danger' if totals.open else '' }}">{{ totals.open }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-secondary small text-uppercase">Total due</div>
+        <div class="stat-value">{{ totals.due|money }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-secondary small text-uppercase">Vehicles monitored</div>
+        <div class="stat-value">{{ totals.monitored }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-secondary small text-uppercase">Scheduler</div>
+        <div class="stat-value fs-4 mt-2">
+          {% if scheduler.running %}
+            <span class="badge text-bg-success">running</span>
+          {% else %}
+            <span class="badge text-bg-secondary">stopped</span>
+          {% endif %}
+        </div>
+        <div class="text-secondary small mt-1">
+          {% if scheduler.last_run_at %}
+            last pass {{ scheduler.last_run_at|humanize }}
+          {% else %}
+            no pass yet
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Your vehicles</span>
+        <span class="text-secondary small">checks every {{ default_interval // 60 }}h by default</span>
+      </div>
+      <div class="card-body p-0">
+        {% if vehicles %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Vehicle</th><th>Plate</th><th>Status</th>
+                  <th class="text-center">Open</th><th>Last check</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for vehicle in vehicles %}
+                <tr>
+                  <td>
+                    <a class="fw-semibold text-decoration-none"
+                       href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}">
+                      {{ vehicle.display_name }}</a>
+                    {% if not vehicle.is_active %}
+                      <span class="badge text-bg-light ms-1">paused</span>
+                    {% endif %}
+                  </td>
+                  <td><code>{{ vehicle.plate_number }}</code></td>
+                  <td>
+                    {{ badge(vehicle.last_status, tooltip=vehicle.last_message) }}
+                    {% if vehicle.last_status in ('blocked','error','unknown') and vehicle.last_message %}
+                      <div class="text-secondary small mt-1">{{ vehicle.last_message }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if vehicle.open_violation_count() %}
+                      <span class="badge text-bg-danger">{{ vehicle.open_violation_count() }}</span>
+                    {% else %}
+                      <span class="text-secondary">&ndash;</span>
+                    {% endif %}
+                  </td>
+                  <td class="small">
+                    {% if vehicle.last_checked_at %}
+                      {{ vehicle.last_checked_at|localtime }}<br>
+                      <span class="text-secondary">{{ vehicle.last_checked_at|humanize }}</span>
+                    {% else %}
+                      <span class="text-secondary">never</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <form method="post" action="{{ url_for('vehicles.check', vehicle_id=vehicle.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-sm btn-outline-success" type="submit">Check now</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="p-4 text-center">
+            <p class="mb-3 text-secondary">You have not saved a vehicle yet.</p>
+            <a class="btn btn-success" href="{{ url_for('vehicles.create') }}">Add your first vehicle</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Open violations</div>
+      <div class="card-body p-0">
+        {% if open_violations %}
+          <ul class="list-group list-group-flush">
+            {% for violation in open_violations %}
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between">
+                  <strong class="small">{{ violation.offense or 'Violation' }}</strong>
+                  <span class="small fw-semibold">{{ violation.amount|money }}</span>
+                </div>
+                <div class="text-secondary small">
+                  {{ violation.vehicle.display_name }} &middot;
+                  {{ violation.source.name if violation.source else '-' }} &middot;
+                  {{ violation.violation_date|shortdate }}
+                </div>
+                {% if violation.location %}
+                  <div class="text-secondary small">{{ violation.location }}</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-4 text-center text-secondary small">
+            No open violations recorded.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Portal health</span>
+        <a class="small" href="{{ url_for('main.help') }}">What do these mean?</a>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for source in sources %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <div class="small fw-semibold">{{ source.name }}</div>
+                <div class="text-secondary small">
+                  {% if source.last_run_at %}
+                    last run {{ source.last_run_at|humanize }}
+                  {% else %}
+                    never run
+                  {% endif %}
+                </div>
+              </div>
+              <span class="badge text-bg-{{ 'success' if source.health == 'healthy' else ('danger' if source.health in ('failing','blocked') else 'secondary') }}">
+                {{ source.health }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Recent checks</span>
+    <span class="text-secondary small">last {{ recent_runs|length }} runs</span>
+  </div>
+  <div class="card-body p-0">
+    {% if recent_runs %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>When</th><th>Vehicle</th><th>Portal</th><th>Result</th><th>Engine</th><th>Message</th></tr>
+          </thead>
+          <tbody>
+          {% for run in recent_runs %}
+            <tr>
+              <td class="small text-nowrap">{{ run.created_at|localtime('%d %b %H:%M') }}</td>
+              <td class="small">{{ run.vehicle.plate_number }}</td>
+              <td class="small">{{ run.source.name if run.source else '-' }}</td>
+              <td>{{ badge(run.status) }}</td>
+              <td class="small"><code>{{ run.engine or '-' }}</code></td>
+              <td class="small text-secondary">{{ run.message|truncate(70) }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-4 text-center text-secondary small">No checks yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

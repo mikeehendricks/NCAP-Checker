@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Consolidated NCAP violation checker for Metro Manila portals.">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+<nav class="navbar navbar-expand-lg app-navbar">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2l7 3v6c0 4.4-3 8.3-7 11-4-2.7-7-6.6-7-11V5l7-3z" fill="#22c55e" opacity=".9"/>
+        <circle cx="12" cy="11" r="3.1" fill="#04231a"/>
+      </svg>
+      <span class="fw-semibold">{{ app_name }}</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
+            aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('vehicles.index') }}">My vehicles</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.help') }}">Help</a></li>
+          {% if current_user.is_admin %}
+            <li class="nav-item"><a class="nav-link text-warning" href="{{ url_for('admin.overview') }}">Admin</a></li>
+          {% endif %}
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.help') }}">How it works</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.about') }}">About</a></li>
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav align-items-lg-center">
+        {% if current_user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="{{ url_for('main.notifications') }}">
+              Alerts
+              {% if unread_notifications %}
+                <span class="badge rounded-pill text-bg-danger ms-1">{{ unread_notifications }}</span>
+              {% endif %}
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+               aria-expanded="false">{{ current_user.username }}</a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('main.notifications') }}">Notifications</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="dropdown-item" type="submit">Sign out</button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Sign in</a></li>
+          {% if settings.registration_open %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">Register</a></li>
+          {% endif %}
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow-1 py-4">
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="app-footer mt-auto py-3">
+  <div class="container d-flex flex-wrap justify-content-between gap-2 small">
+    <span>
+      {{ app_name }} <span class="text-muted">v{{ app_version }}</span> &middot;
+      Unofficial tool &ndash; always confirm on the official LGU portal.
+    </span>
+    <span class="text-muted">
+      <a class="link-secondary" href="{{ url_for('main.help') }}">Help</a> &middot;
+      <a class="link-secondary" href="{{ url_for('main.about') }}">About</a>
+    </span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='vendor/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

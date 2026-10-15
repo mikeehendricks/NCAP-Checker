@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Settings &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Settings</h1>
+{% include "admin/_nav.html" %}
+
+<ul class="nav nav-tabs mb-4">
+  {% for key, label in [('general','General'), ('scheduling','Scheduling'),
+                        ('scraping','Scraping'), ('mail','E-mail')] %}
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if section == key else '' }}"
+         href="{{ url_for('admin.settings', section=key) }}">{{ label }}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+<form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="section" value="{{ section }}">
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      {% if section == 'general' %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="set_app_name">Application name</label>
+            <input class="form-control" id="set_app_name" name="set_app_name"
+                   value="{{ values.app_name }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_tagline">Tagline</label>
+            <input class="form-control" id="set_tagline" name="set_tagline"
+                   value="{{ values.tagline }}">
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_registration_open"
+                     name="set_registration_open" {{ 'checked' if values.registration_open else '' }}>
+              <label class="form-check-label" for="set_registration_open">Open registration</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_registration_requires_approval"
+                     name="set_registration_requires_approval"
+                     {{ 'checked' if values.registration_requires_approval else '' }}>
+              <label class="form-check-label" for="set_registration_requires_approval">
+                New accounts require administrator approval
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_maintenance_mode"
+                     name="set_maintenance_mode" {{ 'checked' if values.maintenance_mode else '' }}>
+              <label class="form-check-label" for="set_maintenance_mode">Maintenance mode</label>
+              <div class="form-text">Administrators can still use the app.</div>
+            </div>
+          </div>
+        </div>
+
+      {% elif section == 'scheduling' %}
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="set_default_interval_minutes">Default interval (minutes)</label>
+            <input class="form-control" type="number" min="{{ values.min_interval_minutes }}"
+                   id="set_default_interval_minutes" name="set_default_interval_minutes"
+                   value="{{ values.default_interval_minutes }}">
+            <div class="form-text">720 = twice a day.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_min_interval_minutes">Minimum interval (minutes)</label>
+            <input class="form-control" type="number" min="15"
+                   id="set_min_interval_minutes" name="set_min_interval_minutes"
+                   value="{{ values.min_interval_minutes }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_scheduler_tick_seconds">Scheduler tick (seconds)</label>
+            <input class="form-control" type="number" min="30"
+                   id="set_scheduler_tick_seconds" name="set_scheduler_tick_seconds"
+                   value="{{ values.scheduler_tick_seconds }}">
+            <div class="form-text">How often the worker wakes up to look for due vehicles.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_scheduler_grace_seconds">Grace period (seconds)</label>
+            <input class="form-control" type="number" min="0"
+                   id="set_scheduler_grace_seconds" name="set_scheduler_grace_seconds"
+                   value="{{ values.scheduler_grace_seconds }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_retention_days">Keep check history (days)</label>
+            <input class="form-control" type="number" min="0"
+                   id="set_retention_days" name="set_retention_days"
+                   value="{{ values.retention_days }}">
+            <div class="form-text">0 keeps everything.</div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_scheduler_enabled"
+                     name="set_scheduler_enabled" {{ 'checked' if values.scheduler_enabled else '' }}>
+              <label class="form-check-label" for="set_scheduler_enabled">Scheduler enabled</label>
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="small">
+            Scheduler process:
+            {% if scheduler.running %}
+              <span class="badge text-bg-success">running</span>
+            {% else %}
+              <span class="badge text-bg-secondary">not running in this process</span>
+            {% endif %}
+            {% for job in scheduler.jobs %}
+              <div class="text-secondary">next <code>{{ job.id }}</code>:
+                {{ job.next_run_at|localtime if job.next_run_at else 'n/a' }}</div>
+            {% endfor %}
+          </div>
+          <form method="post" action="{{ url_for('admin.run_now') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-success" type="submit">Run due checks now</button>
+          </form>
+        </div>
+
+      {% elif section == 'scraping' %}
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="set_http_retries">HTTP retries</label>
+            <input class="form-control" type="number" min="0" id="set_http_retries"
+                   name="set_http_retries" value="{{ values.http_retries }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_request_delay_seconds">Delay between portals (s)</label>
+            <input class="form-control" type="number" min="0" id="set_request_delay_seconds"
+                   name="set_request_delay_seconds" value="{{ values.request_delay_seconds }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_playwright_timeout_ms">Browser timeout (ms)</label>
+            <input class="form-control" type="number" min="5000" id="set_playwright_timeout_ms"
+                   name="set_playwright_timeout_ms" value="{{ values.playwright_timeout_ms }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_circuit_breaker_base">Back-off base (minutes)</label>
+            <input class="form-control" type="number" min="1" id="set_circuit_breaker_base"
+                   name="set_circuit_breaker_base" value="{{ values.circuit_breaker_base }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_circuit_breaker_cap">Back-off cap (minutes)</label>
+            <input class="form-control" type="number" min="1" id="set_circuit_breaker_cap"
+                   name="set_circuit_breaker_cap" value="{{ values.circuit_breaker_cap }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="set_playwright_executable">Chromium path (optional)</label>
+            <input class="form-control" id="set_playwright_executable"
+                   name="set_playwright_executable" value="{{ values.playwright_executable }}"
+                   placeholder="/usr/bin/chromium">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="set_user_agent">User-Agent override</label>
+            <input class="form-control font-monospace" id="set_user_agent"
+                   name="set_user_agent" value="{{ values.user_agent }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="set_proxy_url">Proxy URL (optional)</label>
+            <input class="form-control" id="set_proxy_url" name="set_proxy_url"
+                   value="{{ values.proxy_url }}" placeholder="http://user:pass@host:3128">
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_playwright_enabled"
+                     name="set_playwright_enabled" {{ 'checked' if values.playwright_enabled else '' }}>
+              <label class="form-check-label" for="set_playwright_enabled">
+                Allow the Playwright browser engine
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_playwright_headless"
+                     name="set_playwright_headless" {{ 'checked' if values.playwright_headless else '' }}>
+              <label class="form-check-label" for="set_playwright_headless">Run headless</label>
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_smtp_enabled"
+                     name="set_smtp_enabled" {{ 'checked' if values.smtp_enabled else '' }}>
+              <label class="form-check-label" for="set_smtp_enabled">Send e-mail alerts</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_smtp_host">SMTP host</label>
+            <input class="form-control" id="set_smtp_host" name="set_smtp_host"
+                   value="{{ values.smtp_host }}" placeholder="smtp.gmail.com">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="set_smtp_port">Port</label>
+            <input class="form-control" type="number" id="set_smtp_port" name="set_smtp_port"
+                   value="{{ values.smtp_port }}">
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check me-3">
+              <input class="form-check-input" type="checkbox" id="set_smtp_starttls"
+                     name="set_smtp_starttls" {{ 'checked' if values.smtp_starttls else '' }}>
+              <label class="form-check-label" for="set_smtp_starttls">STARTTLS</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_smtp_ssl"
+                     name="set_smtp_ssl" {{ 'checked' if values.smtp_ssl else '' }}>
+              <label class="form-check-label" for="set_smtp_ssl">SSL</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_smtp_user">SMTP user</label>
+            <input class="form-control" id="set_smtp_user" name="set_smtp_user"
+                   value="{{ values.smtp_user }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_smtp_password">SMTP password</label>
+            <input class="form-control" type="password" id="set_smtp_password"
+                   name="set_smtp_password" value="" autocomplete="new-password"
+                   placeholder="{{ 'saved - leave blank to keep' if smtp_configured else 'app password' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_mail_from">From address</label>
+            <input class="form-control" id="set_mail_from" name="set_mail_from"
+                   value="{{ values.mail_from }}" placeholder="ncap@example.com">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="set_mail_sender_name">Sender name</label>
+            <input class="form-control" id="set_mail_sender_name" name="set_mail_sender_name"
+                   value="{{ values.mail_sender_name }}">
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_notify_on_new_violation"
+                     name="set_notify_on_new_violation"
+                     {{ 'checked' if values.notify_on_new_violation else '' }}>
+              <label class="form-check-label" for="set_notify_on_new_violation">
+                Alert on new violations
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="set_notify_on_failure"
+                     name="set_notify_on_failure" {{ 'checked' if values.notify_on_failure else '' }}>
+              <label class="form-check-label" for="set_notify_on_failure">
+                Alert when a portal check keeps failing
+              </label>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    <div class="card-footer bg-white d-flex gap-2">
+      <button class="btn btn-success" type="submit">Save settings</button>
+      {% if section == 'mail' %}
+        <button class="btn btn-outline-secondary" type="submit"
+                formaction="{{ url_for('admin.settings_test_email') }}"
+                formmethod="post">Send test e-mail to {{ current_user.email }}</button>
+      {% endif %}
+    </div>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "partials/_status_badge.html" import badge with context %}
+{% block title %}My vehicles &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div>
+    <h1 class="h3 mb-1">My vehicles</h1>
+    <p class="text-secondary mb-0">
+      Default schedule: every {{ default_interval // 60 }} hours (minimum {{ min_interval }} minutes).
+    </p>
+  </div>
+  <a class="btn btn-success" href="{{ url_for('vehicles.create') }}">Add vehicle</a>
+</div>
+
+{% if vehicles %}
+  <div class="row g-3">
+    {% for vehicle in vehicles %}
+      <div class="col-md-6 col-xl-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h2 class="h5 mb-1">{{ vehicle.display_name }}</h2>
+                <div class="font-monospace text-secondary">{{ vehicle.plate_number }}</div>
+              </div>
+              {{ badge(vehicle.last_status, tooltip=vehicle.last_message) }}
+            </div>
+            <dl class="row small mt-3 mb-2">
+              <dt class="col-5 text-secondary fw-normal">MV file no.</dt>
+              <dd class="col-7 font-monospace mb-1">{{ vehicle.mv_number }}</dd>
+              <dt class="col-5 text-secondary fw-normal">Interval</dt>
+              <dd class="col-7 mb-1">{{ vehicle.effective_interval(default_interval) // 60 }} h</dd>
+              <dt class="col-5 text-secondary fw-normal">Last check</dt>
+              <dd class="col-7 mb-1">
+                {% if vehicle.last_checked_at %}
+                  {{ vehicle.last_checked_at|localtime }}<br>
+                  <span class="text-secondary">{{ vehicle.last_checked_at|humanize }}</span>
+                {% else %}
+                  never
+                {% endif %}
+              </dd>
+              <dt class="col-5 text-secondary fw-normal">Open</dt>
+              <dd class="col-7 mb-1">
+                {% if vehicle.open_violation_count() %}
+                  <span class="badge text-bg-danger">{{ vehicle.open_violation_count() }}</span>
+                  <span class="text-secondary">{{ vehicle.total_due()|money }}</span>
+                {% else %}
+                  <span class="text-secondary">none</span>
+                {% endif %}
+              </dd>
+            </dl>
+            {% if not vehicle.is_active %}
+              <div class="alert alert-secondary py-1 px-2 small mb-2">Monitoring paused</div>
+            {% endif %}
+            {% if vehicle.last_message %}
+              <div class="small text-secondary">{{ vehicle.last_message }}</div>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white d-flex gap-2">
+            <a class="btn btn-sm btn-outline-secondary"
+               href="{{ url_for('vehicles.detail', vehicle_id=vehicle.id) }}">Details</a>
+            <form method="post" action="{{ url_for('vehicles.check', vehicle_id=vehicle.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-success" type="submit">Check now</button>
+            </form>
+            <form method="post" action="{{ url_for('vehicles.toggle', vehicle_id=vehicle.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-secondary" type="submit">
+                {{ 'Resume' if not vehicle.is_active else 'Pause' }}
+              </button>
+            </form>
+            <a class="btn btn-sm btn-outline-secondary ms-auto"
+               href="{{ url_for('vehicles.edit', vehicle_id=vehicle.id) }}">Edit</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body text-center p-5">
+      <h2 class="h5">No vehicles saved yet</h2>
+      <p class="text-secondary">
+        Add a plate number and MV file number to start monitoring the NCAP portals.
+      </p>
+      <a class="btn btn-success" href="{{ url_for('vehicles.create') }}">Add a vehicle</a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

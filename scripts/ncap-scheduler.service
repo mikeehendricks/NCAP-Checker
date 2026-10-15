@@ -1,0 +1,31 @@
+[Unit]
+Description=NCAP Checker background scheduler
+Documentation=https://github.com/mikeehendricks/NCAP-Checker
+After=network.target ncap-web.service
+
+[Service]
+Type=simple
+User=ncap
+Group=ncap
+WorkingDirectory=/opt/ncap-checker
+Environment="NCAP_ENV=production"
+Environment="NCAP_ROLE=scheduler"
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/opt/ncap-checker/.env
+ExecStart=/opt/ncap-checker/.venv/bin/python scheduler_worker.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=60
+
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/opt/ncap-checker/instance
+
+[Install]
+WantedBy=multi-user.target

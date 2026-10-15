@@ -1,0 +1,42 @@
+[Unit]
+Description=NCAP Checker web interface
+Documentation=https://github.com/mikeehendricks/NCAP-Checker
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ncap
+Group=ncap
+WorkingDirectory=/opt/ncap-checker
+Environment="NCAP_ENV=production"
+Environment="NCAP_ROLE=web"
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/opt/ncap-checker/.env
+ExecStart=/opt/ncap-checker/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8000 \
+    --workers 2 \
+    --threads 4 \
+    --timeout 180 \
+    --graceful-timeout 60 \
+    --access-logfile - \
+    --error-logfile - \
+    wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+KillSignal=SIGQUIT
+TimeoutStopSec=60
+
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/opt/ncap-checker/instance
+
+[Install]
+WantedBy=multi-user.target

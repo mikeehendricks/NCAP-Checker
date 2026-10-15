@@ -1,0 +1,24 @@
+# NCAP Checker - runtime requirements
+Flask==3.1.0
+Werkzeug==3.1.3
+Jinja2==3.1.6
+itsdangerous==2.2.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.36
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+WTForms==3.2.1
+Flask-Migrate==4.1.0
+Alembic==1.14.0
+APScheduler==3.11.0
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.3.0
+python-dotenv==1.0.1
+email-validator==2.2.0
+gunicorn==23.0.0
+
+# Optional: browser engine for the JavaScript / Turnstile protected portals.
+# Install with:  pip install playwright && playwright install chromium
+# (the app degrades gracefully when it is missing)
+playwright==1.49.1

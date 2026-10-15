@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}403 &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-6">403 &ndash; Not allowed</h1>
+  <p class="text-secondary">You do not have permission to view this page.</p>
+  <a class="btn btn-success" href="{{ url_for('main.index') }}">Back to safety</a>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}System &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">System</h1>
+{% include "admin/_nav.html" %}
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Environment</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr><th style="width:40%">Python</th><td>{{ info.python }}</td></tr>
+            <tr><th>Platform</th><td class="small">{{ info.platform }}</td></tr>
+            <tr><th>Flask</th><td>{{ info.flask }}</td></tr>
+            <tr><th>Process role</th><td><code>{{ info.role }}</code></td></tr>
+            <tr><th>Time zone</th><td>{{ info.timezone }}</td></tr>
+            <tr><th>Playwright available</th>
+                <td>
+                  {% if info.playwright %}
+                    <span class="badge text-bg-success">yes</span>
+                  {% else %}
+                    <span class="badge text-bg-warning">no (browser engine disabled)</span>
+                  {% endif %}
+                </td></tr>
+            <tr><th>Database</th><td class="small">{{ info.database_uri }}</td></tr>
+            <tr><th>Database size</th><td>{{ info.db_size_mb }} MB</td></tr>
+            <tr><th>Disk free</th><td>{{ info.disk_free_gb }} GB of {{ info.disk_total_gb }} GB</td></tr>
+            <tr><th>Instance directory</th><td class="small">{{ info.instance_dir }}</td></tr>
+            <tr><th>Data directory</th><td class="small">{{ info.data_dir }}</td></tr>
+            <tr><th>.env file</th><td>{{ 'present' if info.env_file else 'not used' }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Services</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for service in services %}
+            <li class="list-group-item d-flex justify-content-between align-items-center small">
+              <code>{{ service.name }}</code>
+              <span class="badge text-bg-{{ 'success' if service.active else 'secondary' }}">
+                {{ service.state }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Scheduler</div>
+      <div class="card-body small">
+        {% if scheduler.running %}
+          <span class="badge text-bg-success">running</span>
+        {% else %}
+          <span class="badge text-bg-secondary">stopped</span>
+        {% endif %}
+        <ul class="list-unstyled mt-3 mb-0">
+          {% for job in scheduler.jobs %}
+            <li class="mb-2">
+              <code>{{ job.id }}</code><br>
+              <span class="text-secondary">{{ job.trigger }}</span><br>
+              <span class="text-secondary">
+                next run: {{ job.next_run_at|localtime if job.next_run_at else 'n/a' }}
+              </span>
+            </li>
+          {% else %}
+            <li class="text-secondary">No jobs in this process (the scheduler service owns them).</li>
+          {% endfor %}
+        </ul>
+        {% if scheduler.last_run_at %}
+          <hr>
+          <div class="text-secondary">
+            Last pass {{ scheduler.last_run_at|localtime }}:
+            <code>{{ scheduler.last_result }}</code>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

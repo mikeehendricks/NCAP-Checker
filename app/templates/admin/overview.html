@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from "partials/_status_badge.html" import badge with context %}
+{% block title %}Admin &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Administration</h1>
+{% include "admin/_nav.html" %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Users</div>
+      <div class="stat-value">{{ stats.users }}</div>
+      <div class="small text-secondary">
+        {{ stats.admins }} admin &middot;
+        {% if stats.pending_users %}
+          <a href="{{ url_for('admin.users') }}">{{ stats.pending_users }} pending</a>
+        {% else %}0 pending{% endif %}
+      </div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Vehicles</div>
+      <div class="stat-value">{{ stats.active_vehicles }}<span class="fs-6 text-secondary">/{{ stats.vehicles }}</span></div>
+      <div class="small text-secondary">active / total</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Violations</div>
+      <div class="stat-value">{{ stats.open_violations }}<span class="fs-6 text-secondary">/{{ stats.violations }}</span></div>
+      <div class="small text-secondary">open / recorded</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100"><div class="card-body">
+      <div class="text-secondary small text-uppercase">Checks (24h)</div>
+      <div class="stat-value">{{ stats.runs_24h }}</div>
+      <div class="small text-secondary">{{ stats.runs }} all time</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Portal health</span>
+        <a class="small" href="{{ url_for('admin.sources') }}">Configure</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Portal</th><th>Engine</th><th>Health</th><th>Last run</th><th class="text-end">Failures</th></tr>
+          </thead>
+          <tbody>
+          {% for source in sources %}
+            <tr>
+              <td>
+                <div class="small fw-semibold">{{ source.name }}</div>
+                <div class="text-secondary small">{{ source.agency }}</div>
+              </td>
+              <td class="small"><code>{{ source.engine }}</code></td>
+              <td>
+                <span class="badge text-bg-{{ 'success' if source.health == 'healthy' else ('danger' if source.health in ('failing','blocked') else ('warning' if source.health == 'cooling-down' else 'secondary')) }}">
+                  {{ source.health }}
+                </span>
+                {% if source.last_message %}<div class="text-secondary small">{{ source.last_message|truncate(50) }}</div>{% endif %}
+              </td>
+              <td class="small">{{ source.last_run_at|humanize }}</td>
+              <td class="text-end small">{{ source.consecutive_failures }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Recent check runs</div>
+      <div class="card-body p-0">
+        {% if recent_runs %}
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>When</th><th>Vehicle</th><th>Portal</th><th>Result</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+            {% for run in recent_runs %}
+              <tr>
+                <td class="small text-nowrap">{{ run.created_at|localtime('%d %b %H:%M') }}</td>
+                <td class="small">{{ run.vehicle.plate_number }}</td>
+                <td class="small">{{ run.source.name if run.source else '-' }}</td>
+                <td>{{ badge(run.status) }}</td>
+                <td class="small text-secondary">{{ run.message|truncate(60) }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="p-4 text-center text-secondary small">No runs recorded yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Scheduler</div>
+      <div class="card-body">
+        <p class="mb-2">
+          {% if scheduler.running %}
+            <span class="badge text-bg-success">running</span>
+          {% else %}
+            <span class="badge text-bg-secondary">stopped</span>
+          {% endif %}
+          {% if scheduler.busy %}<span class="badge text-bg-info">pass in progress</span>{% endif %}
+        </p>
+        {% for job in scheduler.jobs %}
+          <div class="small">
+            <code>{{ job.id }}</code> &middot; {{ job.trigger }}
+            <div class="text-secondary">
+              next: {{ job.next_run_at|localtime if job.next_run_at else 'n/a' }}
+            </div>
+          </div>
+        {% else %}
+          <div class="small text-secondary">No jobs registered in this process.</div>
+        {% endfor %}
+        <hr>
+        <form method="post" action="{{ url_for('admin.run_now') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-success" type="submit">Run due checks now</button>
+        </form>
+        {% if scheduler.last_result %}
+          <div class="small text-secondary mt-3">
+            Last pass:
+            <code>{{ scheduler.last_result }}</code>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">System services</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for service in services %}
+            <li class="list-group-item d-flex justify-content-between align-items-center small">
+              <code>{{ service.name }}</code>
+              <span class="badge text-bg-{{ 'success' if service.active else 'secondary' }}">
+                {{ service.state }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

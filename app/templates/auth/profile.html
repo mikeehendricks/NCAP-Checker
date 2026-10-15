@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Profile &ndash; {{ app_name }}{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Profile</h1>
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Account details</div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.full_name.label(class="form-label") }}
+              {{ form.full_name(class="form-control") }}
+            </div>
+            <div class="col-md-6">
+              {{ form.email.label(class="form-label") }}
+              {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+              {% for error in form.email.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.timezone.label(class="form-label") }}
+              {{ form.timezone(class="form-control") }}
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.notify_new_violation(class="form-check-input") }}
+                {{ form.notify_new_violation.label(class="form-check-label") }}
+              </div>
+              <div class="form-check">
+                {{ form.notify_email(class="form-check-input") }}
+                {{ form.notify_email.label(class="form-check-label") }}
+              </div>
+              <div class="form-check">
+                {{ form.notify_check_failure(class="form-check-input") }}
+                {{ form.notify_check_failure.label(class="form-check-label") }}
+              </div>
+            </div>
+          </div>
+          {{ form.submit(class="btn btn-success mt-3") }}
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">Change password</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('auth.change_password') }}" novalidate>
+          {{ password_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ password_form.current_password.label(class="form-label") }}
+            {{ password_form.current_password(class="form-control") }}
+            {% for error in password_form.current_password.errors %}
+              <div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.password.label(class="form-label") }}
+            {{ password_form.password(class="form-control") }}
+            {% for error in password_form.password.errors %}
+              <div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.confirm.label(class="form-label") }}
+            {{ password_form.confirm(class="form-control") }}
+            {% for error in password_form.confirm.errors %}
+              <div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+          <button class="btn btn-outline-primary" type="submit">Update password</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">API access</div>
+      <div class="card-body">
+        <p class="small text-secondary">
+          Use this key with the <code>X-API-Key</code> header for scripted checks.
+        </p>
+        <div class="input-group input-group-sm mb-3">
+          <input type="text" class="form-control font-monospace" id="apiKey"
+                 value="{{ current_user.api_key }}" readonly>
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="navigator.clipboard.writeText(document.getElementById('apiKey').value)">
+            Copy
+          </button>
+        </div>
+        <form method="post" action="{{ url_for('auth.rotate_api_key') }}"
+              onsubmit="return confirm('Rotate your API key? Existing scripts must be updated.');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Rotate key</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

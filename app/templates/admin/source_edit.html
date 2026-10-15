@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ source.name }} &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Edit source</h1>
+{% include "admin/_nav.html" %}
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="row g-3">
+            <div class="col-md-6">
+              {{ form.name.label(class="form-label") }}
+              {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+              {% for error in form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              {{ form.agency.label(class="form-label") }}
+              {{ form.agency(class="form-control") }}
+            </div>
+            <div class="col-12">
+              {{ form.base_url.label(class="form-label") }}
+              {{ form.base_url(class="form-control" + (" is-invalid" if form.base_url.errors else "")) }}
+              {% for error in form.base_url.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              {{ form.check_url.label(class="form-label") }}
+              {{ form.check_url(class="form-control" + (" is-invalid" if form.check_url.errors else "")) }}
+              {% for error in form.check_url.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-4">
+              {{ form.engine.label(class="form-label") }}
+              {{ form.engine(class="form-select") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.timeout_seconds.label(class="form-label") }}
+              {{ form.timeout_seconds(class="form-control") }}
+            </div>
+            <div class="col-md-4">
+              {{ form.delay_seconds.label(class="form-label") }}
+              {{ form.delay_seconds(class="form-control") }}
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.enabled(class="form-check-input") }}
+                {{ form.enabled.label(class="form-check-label") }}
+              </div>
+            </div>
+            <div class="col-12">
+              {{ form.config.label(class="form-label") }}
+              {{ form.config(class="form-control font-monospace" + (" is-invalid" if form.config.errors else ""), rows=12) }}
+              <div class="form-text">
+                JSON object merged over the adapter defaults, e.g.
+                <code>{"browser": {"tab_texts": ["Plate + MV File No."], "settle_ms": 3000},
+                "parse": {"table_selector": "table.violations"}}</code>
+              </div>
+              {% for error in form.config.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            {{ form.submit(class="btn btn-success") }}
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin.sources') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-semibold">Useful config keys</div>
+      <div class="card-body small">
+        <dl class="mb-0">
+          <dt><code>http.path</code></dt>
+          <dd class="text-secondary">Relative API path for the HTTP engine (empty = the check URL).</dd>
+          <dt><code>http.content_type</code></dt>
+          <dd class="text-secondary"><code>form</code> or <code>json</code>.</dd>
+          <dt><code>http.plate_key</code> / <code>http.mv_key</code></dt>
+          <dd class="text-secondary">Field names the portal expects.</dd>
+          <dt><code>browser.tab_texts</code></dt>
+          <dd class="text-secondary">Tab or button label to click before filling the form.</dd>
+          <dt><code>browser.plate_selectors</code> / <code>mv_selectors</code></dt>
+          <dd class="text-secondary">CSS selectors for the input boxes.</dd>
+          <dt><code>browser.submit_texts</code></dt>
+          <dd class="text-secondary">Button labels accepted as "submit".</dd>
+          <dt><code>browser.empty_selector</code></dt>
+          <dd class="text-secondary">CSS selector that appears only when there are no violations.</dd>
+          <dt><code>parse.table_selector</code></dt>
+          <dd class="text-secondary">CSS selector of the results table.</dd>
+          <dt><code>parse.column_map</code></dt>
+          <dd class="text-secondary">Map a portal header onto a field, e.g.
+              <code>{"Ticket Number": "ticket_no"}</code>.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

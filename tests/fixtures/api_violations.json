@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "message": "Records retrieved.",
+  "data": {
+    "violations": [
+      {
+        "plate_number": "ABC1234",
+        "ticket_no": "API-2026-00001",
+        "nov_no": "NOV-99120",
+        "violation_date": "2026-09-01",
+        "violation_time": "10:15:00",
+        "location": "C-5 Road, Taguig",
+        "violation": "Over speeding",
+        "amount": "3000.00",
+        "status": "Unpaid",
+        "due_date": "2026-10-01"
+      },
+      {
+        "plate_number": "ABC1234",
+        "ticket_no": "API-2026-00002",
+        "nov_no": "NOV-99121",
+        "violation_date": "2026-09-05",
+        "violation_time": "19:40:00",
+        "location": "Katipunan Ave.",
+        "violation": "Illegal U-turn",
+        "amount": "1000",
+        "status": "Paid",
+        "due_date": "2026-10-05"
+      }
+    ]
+  }
+}

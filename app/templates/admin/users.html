@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Users &ndash; Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Users</h1>
+{% include "admin/_nav.html" %}
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>User</th><th>E-mail</th><th class="text-center">Admin</th>
+            <th class="text-center">Active</th><th class="text-center">Approved</th>
+            <th>Vehicles</th><th>Last login</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+          <tr class="{{ 'table-warning' if not user.is_approved else '' }}">
+            <td>
+              <div class="small fw-semibold">{{ user.username }}</div>
+              <div class="text-secondary small">joined {{ user.created_at|shortdate }}</div>
+            </td>
+            <td class="small">{{ user.email }}</td>
+            <td class="text-center">
+              {% if user.is_admin %}<span class="badge text-bg-warning">admin</span>
+              {% else %}<span class="text-secondary">&ndash;</span>{% endif %}
+            </td>
+            <td class="text-center">
+              <span class="badge text-bg-{{ 'success' if user.is_active else 'secondary' }}">
+                {{ 'active' if user.is_active else 'off' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge text-bg-{{ 'success' if user.is_approved else 'warning' }}">
+                {{ 'yes' if user.is_approved else 'pending' }}
+              </span>
+            </td>
+            <td class="small">{{ user.vehicles.count() }}</td>
+            <td class="small">{{ user.last_login_at|humanize }}</td>
+            <td class="text-end">
+              <div class="d-flex gap-1 justify-content-end flex-wrap">
+                {% if not user.is_approved %}
+                  <form method="post" action="{{ url_for('admin.approve_user', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('admin.toggle_user_admin', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit"
+                          {{ 'disabled' if user.id == current_user.id else '' }}>
+                    {{ 'Revoke admin' if user.is_admin else 'Make admin' }}
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit"
+                          {{ 'disabled' if user.id == current_user.id else '' }}>
+                    {{ 'Deactivate' if user.is_active else 'Activate' }}
+                  </button>
+                </form>
+                <form method="post" action="{{ url_for('admin.reset_user_password', user_id=user.id) }}"
+                      onsubmit="return confirm('Reset the password for {{ user.username }}?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-warning" type="submit">Reset PW</button>
+                </form>
+                <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                      onsubmit="return confirm('Delete {{ user.username }} and all of their vehicles?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit"
+                          {{ 'disabled' if user.id == current_user.id else '' }}>Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer bg-white small text-secondary">
+    New accounts are created at <code>/register</code> when open registration is enabled.
+  </div>
+</div>
+{% endblock %}

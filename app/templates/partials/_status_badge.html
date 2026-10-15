@@ -1,0 +1,12 @@
+{% macro badge(status, label=None, tooltip=None) %}
+  <span class="badge text-bg-{{ status|status_class }} status-badge"
+        {% if tooltip %}title="{{ tooltip }}"{% endif %}>
+    {{ label or CheckStatus.label(status) }}
+  </span>
+{% endmacro %}
+
+{% macro dot(status) %}
+  <span class="status-dot status-dot-{{ status|status_class }}"
+        title="{{ CheckStatus.label(status) }}"
+        aria-label="{{ CheckStatus.label(status) }}"></span>
+{% endmacro %}
